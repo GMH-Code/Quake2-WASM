@@ -1326,6 +1326,8 @@ SDL_BackendInit(void)
 	s_sdldriver = (Cvar_Get("s_sdldriver", "alsa", CVAR_ARCHIVE));
 #elif __APPLE__
 	s_sdldriver = (Cvar_Get("s_sdldriver", "CoreAudio", CVAR_ARCHIVE));
+#elif __EMSCRIPTEN__
+	s_sdldriver = (Cvar_Get("s_sdldriver", "Emscripten", CVAR_ARCHIVE));
 #else
 	s_sdldriver = (Cvar_Get("s_sdldriver", "dsp", CVAR_ARCHIVE));
 #endif
@@ -1400,12 +1402,21 @@ SDL_BackendInit(void)
 	desired.callback = SDL_Callback;
 
 	/* Okay, let's try our luck */
-	if (SDL_OpenAudio(&desired, &obtained) == -1)
+	if (
+#ifdef __EMSCRIPTEN__
+		SDL_OpenAudio(&desired, NULL) == -1
+#else
+		SDL_OpenAudio(&desired, &obtained) == -1
+#endif
+	)
 	{
 		Com_Printf("SDL_OpenAudio() failed: %s\n", SDL_GetError());
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		return 0;
 	}
+#ifdef __EMSCRIPTEN__
+	memcpy(&obtained, &desired, sizeof (desired));
+#endif
 
 	/* This points to the frontend */
 	backend = &sound;

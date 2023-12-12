@@ -82,6 +82,10 @@ char userGivenGame[MAX_QPATH];
 // Hack for the signal handlers.
 qboolean quitnextframe;
 
+// Main loop variables
+static long long newtime;
+static long long oldtime;
+
 #ifndef DEDICATED_ONLY
 #ifdef SDL_CPUPauseInstruction
 #  define Sys_CpuPause() SDL_CPUPauseInstruction()
@@ -107,6 +111,10 @@ static YQ2_ATTR_INLINE void Sys_CpuPause(void)
 #endif
 }
 #endif
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 #endif
 
 static void Qcommon_Frame(int usec);
@@ -158,17 +166,16 @@ Qcommon_Buildstring(void)
 
 	printf("Platform: %s\n", YQ2OSTYPE);
 	printf("Architecture: %s\n", YQ2ARCH);
+
+#ifdef __EMSCRIPTEN__
+	printf("\nWASM port by Gregory Maynard-Hoare\n\n");
+#endif
 }
 
 static void
-Qcommon_Mainloop(void)
+main_loop(void)
 {
-	long long newtime;
-	long long oldtime = Sys_Microseconds();
-
-	/* The mainloop. The legend. */
-	while (1)
-	{
+		/* The mainloop. The legend. */
 #ifndef DEDICATED_ONLY
 		if (!cl_timedemo->value)
 		{
@@ -208,7 +215,18 @@ Qcommon_Mainloop(void)
 
 		Qcommon_Frame(newtime - oldtime);
 		oldtime = newtime;
-	}
+}
+
+static void
+Qcommon_Mainloop(void)
+{
+	oldtime = Sys_Microseconds();
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(main_loop, 0, 1);
+#else
+	while (1)
+		main_loop();
+#endif
 }
 
 void Qcommon_ExecConfigs(qboolean gameStartUp)

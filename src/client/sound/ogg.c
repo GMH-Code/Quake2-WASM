@@ -755,7 +755,11 @@ OGG_Init(void)
 	ogg_shuffle = Cvar_Get("ogg_shuffle", "0", CVAR_ARCHIVE);
 	ogg_ignoretrack0 = Cvar_Get("ogg_ignoretrack0", "0", CVAR_ARCHIVE);
 	ogg_volume = Cvar_Get("ogg_volume", "0.7", CVAR_ARCHIVE);
+#ifdef __EMSCRIPTEN__
+	ogg_enabled = Cvar_Get("ogg_enable", "0", CVAR_ARCHIVE);
+#else
 	ogg_enabled = Cvar_Get("ogg_enable", "1", CVAR_ARCHIVE);
+#endif
 
 	if (ogg_enabled->value != 1)
 	{

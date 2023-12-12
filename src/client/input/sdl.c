@@ -1519,9 +1519,9 @@ IN_Haptic_Effect_Init(int effect_x, int effect_y, int effect_z,
 	static SDL_HapticEffect haptic_effect;
 
 	/* limit magnitude */
-	if (magnitude > SHRT_MAX)
+	if (magnitude > 32767)
 	{
-		magnitude = SHRT_MAX;
+		magnitude = 32767;
 	}
 	else if (magnitude < 0)
 	{
@@ -2005,8 +2005,8 @@ Controller_Rumble(const char *name, vec3_t source, qboolean from_player,
 	}
 
 	effect_volume = joy_haptic_magnitude->value * intens * dist_prop * volume;
-	low_freq = min(effect_volume * low_freq, USHRT_MAX);
-	hi_freq = min(effect_volume * hi_freq, USHRT_MAX);
+	low_freq = min(effect_volume * low_freq, 65535);
+	hi_freq = min(effect_volume * hi_freq, 65535);
 
 	// Com_Printf("%-29s: vol %5u - %4u ms - dp %.3f l %5.0f h %5.0f\n",
 	//	name, effect_volume, duration, dist_prop, low_freq, hi_freq);

@@ -35,6 +35,10 @@
 #include <GL/gl.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <gl4esinit.h>
+#endif
+
 static SDL_Window* window = NULL;
 static SDL_GLContext context = NULL;
 qboolean IsHighDPIaware = false;
@@ -190,6 +194,10 @@ int RI_InitContext(void* win)
 	}
 
 	window = (SDL_Window*)win;
+
+#ifdef __EMSCRIPTEN__
+	initialize_gl4es();
+#endif
 
 	// Initialize GL context.
 	context = SDL_GL_CreateContext(window);

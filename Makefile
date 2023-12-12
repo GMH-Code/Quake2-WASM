@@ -72,6 +72,13 @@ OSX_APP:=yes
 # case of presence.
 CONFIG_FILE:=config.mk
 
+# Set the path to GL4ES (-fPIC compiled) when building with Emscripten
+ifdef EMSCRIPTEN
+GL4ES_PATH ?= /home/user/gl4es_pic
+WITH_CURL := no
+WITH_OPENAL := no
+endif
+
 # ----------
 
 # In case a of a configuration file being present, we'll just use it
@@ -83,7 +90,12 @@ endif
 ifdef SystemRoot
 YQ2_OSTYPE ?= Windows
 else
+ifdef EMSCRIPTEN
+YQ2_OSTYPE ?= Emscripten
+YQ2_ARCH ?= wasm
+else
 YQ2_OSTYPE ?= $(shell uname -s)
+endif
 endif
 
 # Special case for MinGW
@@ -152,7 +164,11 @@ ifdef UBSAN
 override CFLAGS += -fsanitize=undefined -DUSE_SANITIZER
 endif
 else
+ifdef EMSCRIPTEN
+CFLAGS ?= -O3 -Wall -pipe -fomit-frame-pointer
+else
 CFLAGS ?= -O2 -Wall -pipe -fomit-frame-pointer
+endif
 endif
 
 # Always needed are:
@@ -306,6 +322,10 @@ else ifeq ($(YQ2_OSTYPE),OpenBSD)
 LDFLAGS ?= -L/usr/local/lib
 else ifeq ($(YQ2_OSTYPE),Windows)
 LDFLAGS ?= -L/usr/lib
+else ifeq ($(YQ2_OSTYPE),Emscripten)
+ifndef DEBUG
+LDFLAGS ?= -O3
+endif
 endif
 
 # Link address sanitizer if requested.
@@ -342,9 +362,11 @@ endif
 # don't support it at all.
 ifndef ASAN
 ifndef UBSAN
+ifndef EMSCRIPTEN
 ifneq ($(YQ2_OSTYPE), Darwin)
 ifneq ($(YQ2_OSTYPE), OpenBSD)
 override LDFLAGS += -Wl,--no-undefined
+endif
 endif
 endif
 endif
@@ -382,7 +404,11 @@ endif
 # ----------
 
 # Builds everything
+ifeq ($(YQ2_OSTYPE), Emscripten)
+all: config ref_soft ref_gl1 game client
+else
 all: config client server game ref_gl1 ref_gl3 ref_gles3 ref_soft
+endif
 
 # ----------
 
@@ -448,10 +474,17 @@ endif
 
 else # not Windows
 
+ifeq ($(YQ2_OSTYPE), Emscripten)
+client:
+	@echo "===> Building quake2.html"
+	${Q}mkdir -p release
+	$(MAKE) release/quake2.html
+else
 client:
 	@echo "===> Building quake2"
 	${Q}mkdir -p release
 	$(MAKE) release/quake2
+endif
 
 ifeq ($(YQ2_OSTYPE), Darwin)
 build/client/%.o : %.c
@@ -465,7 +498,11 @@ build/client/%.o: %.c
 	${Q}$(CC) -c $(CFLAGS) $(SDLCFLAGS) $(ZIPCFLAGS) $(INCLUDE) -o $@ $<
 endif
 
+ifeq ($(YQ2_OSTYPE), Emscripten)
+release/quake2.html : CFLAGS += -Wno-unused-result
+else
 release/quake2 : CFLAGS += -Wno-unused-result
+endif
 
 ifeq ($(WITH_CURL),yes)
 release/quake2 : CFLAGS += -DUSE_CURL
@@ -514,6 +551,11 @@ release/quake2 : CFLAGS += -DHAVE_EXECINFO
 release/quake2 : LDLIBS += -lexecinfo
 endif
 
+ifeq ($(YQ2_OSTYPE), Emscripten)
+release/quake2.html : CFLAGS += -fPIC
+release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sMAIN_MODULE=2 -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB -sALLOW_MEMORY_GROWTH --preload-file=wasm/baseq2@/baseq2 release/ref_soft.wasm release/ref_gl1.wasm release/game.wasm
+endif
+
 ifeq ($(WITH_RPATH),yes)
 ifeq ($(YQ2_OSTYPE), Darwin)
 release/quake2 : LDFLAGS += -Wl,-rpath,'@executable_path/lib'
@@ -539,7 +581,7 @@ build/server/%.o: %.c
 
 release/q2ded.exe : CFLAGS += -DDEDICATED_ONLY
 
-else # not Windows
+else ifneq ($(YQ2_OSTYPE), Emscripten) # not Windows or Emscripten
 
 server:
 	@echo "===> Building q2ded"
@@ -580,7 +622,17 @@ ref_gl1:
 
 release/ref_gl1.dylib : LDFLAGS += -shared -framework OpenGL
 
-else # not Windows or Darwin
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+
+ref_gl1:
+	@echo "===> Building ref_gl1.wasm"
+	${Q}mkdir -p release
+	$(MAKE) release/ref_gl1.wasm
+
+release/ref_gl1.wasm : CFLAGS += -fPIC -I$(GL4ES_PATH)/include
+release/ref_gl1.wasm : LDFLAGS += -sSIDE_MODULE=1 $(GL4ES_PATH)/lib/libGL.a
+
+else # not Windows, Darwin, or Emscripten
 
 ref_gl1:
 	@echo "===> Building ref_gl1.so"
@@ -620,7 +672,7 @@ ref_gl3:
 release/ref_gl3.dylib : GLAD_INCLUDE = -Isrc/client/refresh/gl3/glad/include
 release/ref_gl3.dylib : LDFLAGS += -shared
 
-else # not Windows or Darwin
+else ifneq ($(YQ2_OSTYPE), Emscripten) # not Windows, Darwin or Emscripten
 
 ref_gl3:
 	@echo "===> Building ref_gl3.so"
@@ -669,7 +721,7 @@ release/ref_gles3.dylib : CFLAGS += -DYQ2_GL3_GLES3 -DYQ2_GL3_GLES
 
 release/ref_gles3.dylib : LDFLAGS += -shared
 
-else # not Windows or Darwin
+else ifneq ($(YQ2_OSTYPE), Emscripten) # not Windows, Darwin, or Emscripten
 
 ref_gles3:
 	@echo "===> Building ref_gles3.so"
@@ -711,6 +763,16 @@ ref_soft:
 	$(MAKE) release/ref_soft.dylib
 
 release/ref_soft.dylib : LDFLAGS += -shared
+
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+
+ref_soft:
+	@echo "===> Building ref_soft.wasm"
+	${Q}mkdir -p release
+	$(MAKE) release/ref_soft.wasm
+
+release/ref_soft.wasm : CFLAGS += -fPIC
+release/ref_soft.wasm : LDFLAGS += -sSIDE_MODULE=1
 
 else # not Windows or Darwin
 
@@ -759,7 +821,21 @@ build/baseq2/%.o: %.c
 release/baseq2/game.dylib : CFLAGS += -fPIC
 release/baseq2/game.dylib : LDFLAGS += -shared
 
-else # not Windows or Darwin
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+
+game:
+	@echo "===> Building game.wasm"
+	$(MAKE) release/game.wasm
+
+build/baseq2/%.o: %.c
+	@echo "===> CC $<"
+	${Q}mkdir -p $(@D)
+	${Q}$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<
+
+release/game.wasm : CFLAGS += -fPIC -Wno-unused-result
+release/game.wasm : LDFLAGS += -sSIDE_MODULE=1
+
+else # not Windows, Darwin, or Emscripten
 
 game:
 	@echo "===> Building baseq2/game.so"
@@ -1118,7 +1194,7 @@ release/quake2.exe : src/win-wrapper/wrapper.c icon
 	$(Q)$(CC) -Wall -mwindows build/icon/icon.res src/win-wrapper/wrapper.c -o $@
 	$(Q)strip $@
 else
-release/quake2 : $(CLIENT_OBJS)
+release/quake2.html : $(CLIENT_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(CLIENT_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
 endif
@@ -1129,7 +1205,7 @@ release/q2ded.exe : $(SERVER_OBJS) icon
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) build/icon/icon.res $(SERVER_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
 	$(Q)strip $@
-else
+else ifneq ($(YQ2_OSTYPE), Emscripten)
 release/q2ded : $(SERVER_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(SERVER_OBJS) $(LDLIBS) -o $@
@@ -1143,6 +1219,10 @@ release/ref_gl1.dll : $(REFGL1_OBJS)
 	$(Q)strip $@
 else ifeq ($(YQ2_OSTYPE), Darwin)
 release/ref_gl1.dylib : $(REFGL1_OBJS)
+	@echo "===> LD $@"
+	${Q}$(CC) $(LDFLAGS) $(REFGL1_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+release/ref_gl1.wasm : $(REFGL1_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(REFGL1_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
 else
@@ -1193,6 +1273,10 @@ else ifeq ($(YQ2_OSTYPE), Darwin)
 release/ref_soft.dylib : $(REFSOFT_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(REFSOFT_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+release/ref_soft.wasm : $(REFSOFT_OBJS)
+	@echo "===> LD $@"
+	${Q}$(CC) $(LDFLAGS) $(REFSOFT_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
 else
 release/ref_soft.so : $(REFSOFT_OBJS)
 	@echo "===> LD $@"
@@ -1207,6 +1291,10 @@ release/baseq2/game.dll : $(GAME_OBJS)
 	$(Q)strip $@
 else ifeq ($(YQ2_OSTYPE), Darwin)
 release/baseq2/game.dylib : $(GAME_OBJS)
+	@echo "===> LD $@"
+	${Q}$(CC) $(LDFLAGS) $(GAME_OBJS) $(LDLIBS) -o $@
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+release/game.wasm : $(GAME_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(GAME_OBJS) $(LDLIBS) -o $@
 else

@@ -409,6 +409,8 @@ Sys_GetGameAPI(void *parms)
 	char *str_p;
 #ifdef __APPLE__
 	const char *gamename = "game.dylib";
+#elif defined(__EMSCRIPTEN__)
+	const char *gamename = "game.wasm";
 #else
 	const char *gamename = "game.so";
 #endif
@@ -420,6 +422,9 @@ Sys_GetGameAPI(void *parms)
 
 	Com_Printf("Loading library: %s\n", gamename);
 
+#ifdef __EMSCRIPTEN__
+	game_library = dlopen(gamename, RTLD_NOW);
+#else
 	/* now run through the search paths */
 	path = NULL;
 
@@ -478,6 +483,7 @@ Sys_GetGameAPI(void *parms)
 			return NULL;
 		}
 	}
+#endif // __EMSCRIPTEN__
 
 	GetGameAPI = (void *)dlsym(game_library, "GetGameAPI");
 

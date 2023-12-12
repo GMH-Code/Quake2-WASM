@@ -113,6 +113,7 @@ Hunk_Alloc(int size)
 int
 Hunk_End(void)
 {
+#ifndef __EMSCRIPTEN__
 	byte *n = NULL;
 
 #if defined(__linux__)
@@ -151,6 +152,7 @@ Hunk_End(void)
 	}
 
 	*((size_t *)membase) = curhunksize + sizeof(size_t);
+#endif // !__EMSCRIPTEN__
 
 	return curhunksize;
 }
@@ -158,6 +160,7 @@ Hunk_End(void)
 void
 Hunk_Free(void *base)
 {
+#ifndef __EMSCRIPTEN__
 	if (base)
 	{
 		byte *m;
@@ -169,5 +172,6 @@ Hunk_Free(void *base)
 			Sys_Error("Hunk_Free: munmap failed (%d)", errno);
 		}
 	}
+#endif // !__EMSCRIPTEN__
 }
 

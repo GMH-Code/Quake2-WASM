@@ -308,6 +308,8 @@ ref_restart_t restart_state = RESTART_UNDEF;
 const char* lib_ext = "dylib";
 #elif defined(_WIN32)
 const char* lib_ext = "dll";
+#elif defined(__EMSCRIPTEN__)
+const char* lib_ext = "wasm";
 #else
 const char* lib_ext = "so";
 #endif
@@ -327,6 +329,9 @@ VID_GetRendererLibPath(const char *renderer, char *path, size_t len)
 qboolean
 VID_HasRenderer(const char *renderer)
 {
+#ifdef __EMSCRIPTEN__
+	return ((strcmp("soft", renderer) == 0) || (strcmp("gl1", renderer) == 0));
+#else
 	char reflib_path[MAX_OSPATH] = {0};
 	VID_GetRendererLibPath(renderer, reflib_path, sizeof(reflib_path));
 
@@ -336,6 +341,7 @@ VID_HasRenderer(const char *renderer)
 	}
 
 	return false;
+#endif
 }
 
 /*
