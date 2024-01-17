@@ -498,6 +498,12 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	int height = *pheight;
 	unsigned int fs_flag = 0;
 
+#ifdef __EMSCRIPTEN__
+	// Force fullscreen and vsync off.  Browser vsync will still be used
+	fullscreen = 0;
+	Cvar_SetValue("vid_fullscreen", fullscreen);
+	Cvar_SetValue("r_vsync", 0);
+#else
 	if (fullscreen == 1)
 	{
 		fs_flag = SDL_WINDOW_FULLSCREEN;
@@ -506,6 +512,7 @@ GLimp_InitGraphics(int fullscreen, int *pwidth, int *pheight)
 	{
 		fs_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
+#endif
 
 	/* Only do this if we already have a working window and a fully
 	initialized rendering backend GLimp_InitGraphics() is also

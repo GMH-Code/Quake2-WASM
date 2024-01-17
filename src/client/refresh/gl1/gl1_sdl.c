@@ -168,6 +168,7 @@ void RI_SetVsync(void)
 void
 RI_UpdateGamma(void)
 {
+#ifndef __EMSCRIPTEN__
 	float gamma = (vid_gamma->value);
 
 	Uint16 ramp[256];
@@ -177,6 +178,7 @@ RI_UpdateGamma(void)
 	{
 		R_Printf(PRINT_ALL, "Setting gamma failed: %s\n", SDL_GetError());
 	}
+#endif
 }
 
 /*
