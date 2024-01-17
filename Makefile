@@ -553,7 +553,9 @@ endif
 
 ifeq ($(YQ2_OSTYPE), Emscripten)
 release/quake2.html : CFLAGS += -fPIC
-release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sMAIN_MODULE=2 -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB -sALLOW_MEMORY_GROWTH --preload-file=wasm/baseq2@/baseq2 release/ref_soft.wasm release/ref_gl1.wasm release/game.wasm
+release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sMAIN_MODULE=2 -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB \
+                                 -sALLOW_MEMORY_GROWTH --shell-file wasm/shell.html --preload-file=wasm/baseq2@/baseq2 \
+                                 release/ref_soft.wasm release/ref_gl1.wasm release/game.wasm
 endif
 
 ifeq ($(WITH_RPATH),yes)
