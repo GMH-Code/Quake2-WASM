@@ -176,6 +176,14 @@ static void
 main_loop(void)
 {
 		/* The mainloop. The legend. */
+
+#ifdef __EMSCRIPTEN__
+		EM_ASM(
+			if (typeof Module.hideConsole === 'function')
+				Module.hideConsole();
+		);
+#endif
+
 #ifndef DEDICATED_ONLY
 		if (!cl_timedemo->value)
 		{

@@ -47,6 +47,10 @@
 #include "../../common/header/common.h"
 #include "../../common/header/glob.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 // Pointer to game library
 static void *game_library;
 
@@ -103,6 +107,16 @@ Sys_Quit(void)
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) & ~FNDELAY);
 
 	printf("------------------------------------\n");
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM(
+		if (typeof Module.showConsole === 'function')
+			Module.showConsole();
+	);
+
+	// Don't come back to the main loop after exiting
+	emscripten_pause_main_loop();
+#endif
 
 	exit(0);
 }
