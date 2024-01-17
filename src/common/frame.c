@@ -444,6 +444,16 @@ Qcommon_Init(int argc, char **argv)
 	}
 #endif
 
+	if (argc > 1)
+	{
+		Com_Printf("Startup args:");
+
+		for (int pnum=1; pnum<argc; pnum++)
+			Com_Printf(" %s", argv[pnum]);
+
+		Com_Printf("\n\n");
+	}
+
 	Com_Printf("==== Yamagi Quake II Initialized ====\n\n");
 	Com_Printf("*************************************\n\n");
 
