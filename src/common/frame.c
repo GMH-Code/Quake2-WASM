@@ -28,6 +28,11 @@
 #include "header/zone.h"
 #include <setjmp.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include "../backends/wasm/header/initfs.h"
+#endif
+
 cvar_t *developer;
 cvar_t *modder;
 cvar_t *timescale;
@@ -114,7 +119,7 @@ static YQ2_ATTR_INLINE void Sys_CpuPause(void)
 #endif
 
 #ifdef __EMSCRIPTEN__
-#include <emscripten.h>
+static qboolean restore_busy;
 #endif
 
 static void Qcommon_Frame(int usec);
@@ -178,10 +183,18 @@ main_loop(void)
 		/* The mainloop. The legend. */
 
 #ifdef __EMSCRIPTEN__
-		EM_ASM(
-			if (typeof Module.hideConsole === 'function')
-				Module.hideConsole();
-		);
+		if (restore_busy) {
+			// Call JavaScript code to check restore status
+			if (wasm_restore_busy())
+				return;
+
+			EM_ASM(
+				if (typeof Module.hideConsole === 'function')
+					Module.hideConsole();
+			);
+
+			restore_busy = false;
+		}
 #endif
 
 #ifndef DEDICATED_ONLY
@@ -230,6 +243,8 @@ Qcommon_Mainloop(void)
 {
 	oldtime = Sys_Microseconds();
 #ifdef __EMSCRIPTEN__
+	restore_busy = true;
+	wasm_init_fs();
 	emscripten_set_main_loop(main_loop, 0, 1);
 #else
 	while (1)

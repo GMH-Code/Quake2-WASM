@@ -560,8 +560,13 @@ char *
 Sys_GetHomeDir(void)
 {
 	static char gdir[MAX_OSPATH];
+#ifndef __EMSCRIPTEN__
 	char *home;
+#endif
 
+#ifdef __EMSCRIPTEN__
+	snprintf(gdir, sizeof(gdir), "/quake2-wasm");
+#else
 	home = getenv("HOME");
 
 	if (!home)
@@ -575,6 +580,8 @@ Sys_GetHomeDir(void)
 	snprintf(gdir, sizeof(gdir), "%s/config/settings/%s", home, cfgdir);
 #endif
 	Sys_Mkdir(gdir);
+
+#endif // __EMSCRIPTEN__
 
 	return gdir;
 }
@@ -618,6 +625,9 @@ Sys_RemoveDir(const char *path)
 qboolean
 Sys_Realpath(const char *in, char *out, size_t size)
 {
+#ifdef __EMSCRIPTEN__
+	Q_strlcpy(out, in, size);
+#else
 	char *converted = realpath(in, NULL);
 
 	if (converted == NULL)
@@ -628,6 +638,7 @@ Sys_Realpath(const char *in, char *out, size_t size)
 
 	Q_strlcpy(out, converted, size);
 	free(converted);
+#endif
 
 	return true;
 }

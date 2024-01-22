@@ -149,6 +149,9 @@ const char *Sys_GetBinaryDir(void)
 {
 	static char exeDir[PATH_MAX] = {0};
 
+#ifdef __EMSCRIPTEN__
+	Q_strlcpy(exeDir, "./", sizeof(exeDir));
+#else
 	if(exeDir[0] != '\0') {
 		return exeDir;
 	}
@@ -168,6 +171,7 @@ const char *Sys_GetBinaryDir(void)
 
 		if (lastSlash != NULL) lastSlash[1] = '\0'; // cut off after last (back)slash
 	}
+#endif // __EMSCRIPTEN__
 
 	return exeDir;
 }

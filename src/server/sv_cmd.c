@@ -540,6 +540,9 @@ SV_DumpUser_f(void)
 void
 SV_ServerRecord_f(void)
 {
+#ifdef __EMSCRIPTEN__
+	Com_Printf("Recording server demos is disabled in Quake2-WASM.\n");
+#else
 	char name[MAX_OSPATH];
 	byte buf_data[32768];
 	sizebuf_t buf;
@@ -629,6 +632,7 @@ SV_ServerRecord_f(void)
 	len = LittleLong(buf.cursize);
 	fwrite(&len, 4, 1, svs.demofile);
 	fwrite(buf.data, buf.cursize, 1, svs.demofile);
+#endif // __EMSCRIPTEN__
 }
 
 /*
@@ -637,6 +641,7 @@ SV_ServerRecord_f(void)
 void
 SV_ServerStop_f(void)
 {
+#ifndef __EMSCRIPTEN__
 	if (!svs.demofile)
 	{
 		Com_Printf("Not doing a serverrecord.\n");
@@ -646,6 +651,7 @@ SV_ServerStop_f(void)
 	fclose(svs.demofile);
 	svs.demofile = NULL;
 	Com_Printf("Recording completed.\n");
+#endif // !__EMSCRIPTEN__
 }
 
 /*

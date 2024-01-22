@@ -28,6 +28,10 @@
 #include "header/client.h"
 #include "input/header/input.h"
 
+#ifdef __EMSCRIPTEN__
+#include "../backends/wasm/header/syncfs.h"
+#endif
+
 void CL_ForwardToServer_f(void);
 void CL_Changing_f(void);
 void CL_Reconnect_f(void);
@@ -124,6 +128,7 @@ CL_WriteDemoMessage(void)
 void
 CL_Stop_f(void)
 {
+#ifndef __EMSCRIPTEN__
 	int len;
 
 	if (!cls.demorecording)
@@ -139,6 +144,7 @@ CL_Stop_f(void)
 	cls.demofile = NULL;
 	cls.demorecording = false;
 	Com_Printf("Stopped demo.\n");
+#endif // !__EMSCRIPTEN__
 }
 
 /*
@@ -148,6 +154,9 @@ CL_Stop_f(void)
 void
 CL_Record_f(void)
 {
+#ifdef __EMSCRIPTEN__
+	Com_Printf("Recording demos is disabled in Quake2-WASM.\n");
+#else
 	char name[MAX_OSPATH];
 	byte buf_data[MAX_MSGLEN];
 	sizebuf_t buf;
@@ -258,6 +267,7 @@ CL_Record_f(void)
 	len = LittleLong(buf.cursize);
 	fwrite(&len, 4, 1, cls.demofile);
 	fwrite(buf.data, buf.cursize, 1, cls.demofile);
+#endif // __EMSCRIPTEN__
 }
 
 void
@@ -965,6 +975,12 @@ CL_Shutdown(void)
 	CL_WriteConfiguration();
 
 	Key_WriteConsoleHistory();
+
+#ifdef __EMSCRIPTEN__
+	// The Emscripten runtime must stay alive after calling this, otherwise the
+	// save may not complete before the engine shuts down
+	wasm_sync_fs();
+#endif
 
 	OGG_Stop();
 

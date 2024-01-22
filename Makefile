@@ -555,7 +555,7 @@ ifeq ($(YQ2_OSTYPE), Emscripten)
 release/quake2.html : CFLAGS += -fPIC
 release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sMAIN_MODULE=2 -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB \
                                  -sALLOW_MEMORY_GROWTH --shell-file wasm/shell.html --preload-file=wasm/baseq2@/baseq2 \
-                                 release/ref_soft.wasm release/ref_gl1.wasm release/game.wasm
+                                 release/ref_soft.wasm release/ref_gl1.wasm release/game.wasm -lidbfs.js
 endif
 
 ifeq ($(WITH_RPATH),yes)
@@ -989,6 +989,12 @@ CLIENT_OBJS_ += \
 	src/backends/unix/signalhandler.o \
 	src/backends/unix/system.o \
 	src/backends/unix/shared/hunk.o
+endif
+
+ifeq ($(YQ2_OSTYPE), Emscripten)
+CLIENT_OBJS_ += \
+	src/backends/wasm/initfs.o \
+	src/backends/wasm/syncfs.o
 endif
 
 # ----------

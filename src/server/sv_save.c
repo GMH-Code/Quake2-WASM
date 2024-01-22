@@ -26,6 +26,10 @@
 
 #include "header/server.h"
 
+#ifdef __EMSCRIPTEN__
+#include "../backends/wasm/header/syncfs.h"
+#endif
+
 void CM_ReadPortalState(fileHandle_t f);
 
 /*
@@ -523,6 +527,10 @@ SV_Savegame_f(void)
 
 	/* copy it off */
 	SV_CopySaveGame("current", dir);
+
+#ifdef __EMSCRIPTEN__
+	wasm_sync_fs();
+#endif
 
 	Com_Printf("Done.\n");
 }

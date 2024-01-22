@@ -71,6 +71,9 @@ compress_for_stbiw(unsigned char *data, int data_len, int *out_len, int quality)
  */
 void VID_WriteScreenshot(int width, int height, int comp, const void* data)
 {
+#ifdef __EMSCRIPTEN__
+	Com_Printf("Screenshots are disabled in Quake2-WASM.\n");
+#else
 	char picname[80];
 	char checkname[MAX_OSPATH];
 	int i, success = 0;
@@ -192,6 +195,7 @@ void VID_WriteScreenshot(int width, int height, int comp, const void* data)
 	{
 		Com_Printf("SCR_ScreenShot_f: Couldn't write %s\n", picname);
 	}
+#endif // __EMSCRIPTEN__
 }
 
 // --------
