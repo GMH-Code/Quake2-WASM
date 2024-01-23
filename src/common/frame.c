@@ -91,6 +91,7 @@ qboolean quitnextframe;
 static long long newtime;
 static long long oldtime;
 
+#ifndef __EMSCRIPTEN__
 #ifndef DEDICATED_ONLY
 #ifdef SDL_CPUPauseInstruction
 #  define Sys_CpuPause() SDL_CPUPauseInstruction()
@@ -117,6 +118,7 @@ static YQ2_ATTR_INLINE void Sys_CpuPause(void)
 }
 #endif
 #endif
+#endif // !__EMSCRIPTEN__
 
 #ifdef __EMSCRIPTEN__
 static qboolean restore_busy;
@@ -197,6 +199,7 @@ main_loop(void)
 		}
 #endif
 
+#ifndef __EMSCRIPTEN__
 #ifndef DEDICATED_ONLY
 		if (!cl_timedemo->value)
 		{
@@ -228,6 +231,7 @@ main_loop(void)
 #else
 		Sys_Nanosleep(850000);
 #endif
+#endif // !__EMSCRIPTEN__
 
 		newtime = Sys_Microseconds();
 
