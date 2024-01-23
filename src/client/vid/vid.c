@@ -37,6 +37,10 @@
 
 #include "../../common/unzip/miniz/miniz.h"
 
+#ifdef __EMSCRIPTEN__
+static qboolean gl1_block_init = false;
+#endif
+
 static unsigned char*
 compress_for_stbiw(unsigned char *data, int data_len, int *out_len, int quality)
 {
@@ -410,6 +414,17 @@ VID_LoadRenderer(void)
 	// Log what we're doing.
 	Com_Printf("----- refresher initialization -----\n");
 
+#ifdef __EMSCRIPTEN__
+	// When using GL4ES, the GL context currently becomes corrupted upon any
+	// video restart, so use a fallback renderer until the page is reloaded.
+	if (gl1_block_init && strcmp(vid_renderer->string, "gl1") == 0)
+	{
+		Com_Printf("Cannot start the gl1 renderer now.\n");
+		Com_Printf("Please reload the page!\n");
+		return false;
+	}
+#endif
+
 	snprintf(reflib_name, sizeof(reflib_name), "ref_%s.%s", vid_renderer->string, lib_ext);
 	VID_GetRendererLibPath(vid_renderer->string, reflib_path, sizeof(reflib_path));
 	Com_Printf("Loading library: %s\n", reflib_name);
@@ -433,6 +448,12 @@ VID_LoadRenderer(void)
 
 		return false;
 	}
+
+#ifdef __EMSCRIPTEN__
+	// The GL1.x renderer currently does not initialise properly after another
+	// renderer has started.
+	gl1_block_init = true;
+#endif
 
 	// Fill in the struct exported to the renderer.
 	// FIXME: Do we really need all these?
