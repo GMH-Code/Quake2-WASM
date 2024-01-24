@@ -787,10 +787,21 @@ CL_CalcViewValues(void)
 	}
 
 	/* don't interpolate blend color */
+#ifdef __EMSCRIPTEN__
+	// Transfer RGB blend to the renderer as normal
+	for (i = 0; i < 3; i++)
+	{
+		cl.refdef.blend[i] = ps->blend[i];
+	}
+
+	// Reduce excessive alpha
+	cl.refdef.blend[3] = ps->blend[3] * 0.75;
+#else
 	for (i = 0; i < 4; i++)
 	{
 		cl.refdef.blend[i] = ps->blend[i];
 	}
+#endif
 
 	/* add the weapon */
 	CL_AddViewWeapon(ps, ops);
