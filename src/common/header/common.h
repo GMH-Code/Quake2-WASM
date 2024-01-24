@@ -808,6 +808,7 @@ void *Z_TagMalloc(int size, int tag);
 void Z_FreeTags(int tag);
 
 void Qcommon_Init(int argc, char **argv);
+void Qcommon_StartSubsystems(void);
 void Qcommon_ExecConfigs(qboolean addEarlyCmds);
 const char* Qcommon_GetInitialGame(void);
 void Qcommon_Shutdown(void);

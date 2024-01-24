@@ -120,10 +120,6 @@ static YQ2_ATTR_INLINE void Sys_CpuPause(void)
 #endif
 #endif // !__EMSCRIPTEN__
 
-#ifdef __EMSCRIPTEN__
-static qboolean restore_busy;
-#endif
-
 static void Qcommon_Frame(int usec);
 
 // ----
@@ -180,24 +176,9 @@ Qcommon_Buildstring(void)
 }
 
 static void
-main_loop(void)
+Qcommon_Mainloop_Iteration(void)
 {
 		/* The mainloop. The legend. */
-
-#ifdef __EMSCRIPTEN__
-		if (restore_busy) {
-			// Call JavaScript code to check restore status
-			if (wasm_restore_busy())
-				return;
-
-			EM_ASM(
-				if (typeof Module.hideConsole === 'function')
-					Module.hideConsole();
-			);
-
-			restore_busy = false;
-		}
-#endif
 
 #ifndef __EMSCRIPTEN__
 #ifndef DEDICATED_ONLY
@@ -247,12 +228,10 @@ Qcommon_Mainloop(void)
 {
 	oldtime = Sys_Microseconds();
 #ifdef __EMSCRIPTEN__
-	restore_busy = true;
-	wasm_init_fs();
-	emscripten_set_main_loop(main_loop, 0, 1);
+	emscripten_set_main_loop(Qcommon_Mainloop_Iteration, 0, 1);
 #else
 	while (1)
-		main_loop();
+		Qcommon_Mainloop_Iteration();
 #endif
 }
 
@@ -354,8 +333,49 @@ Qcommon_Init(int argc, char **argv)
 	// Initialize zone malloc().
 	z_chain.next = z_chain.prev = &z_chain;
 
+#ifdef __EMSCRIPTEN__
+	// Display command line arguments
+	if (argc > 1)
+	{
+		printf("Startup args:");
+
+		for (int pnum=1; pnum<argc; pnum++)
+			printf(" %s", argv[pnum]);
+
+		printf("\n\n");
+	}
+#endif
+
 	// Start early subsystems.
 	COM_InitArgv(argc, argv);
+
+#ifdef __EMSCRIPTEN__
+	// Mount filesystem asynchronously
+	wasm_init_fs();
+
+	// This will be updated after the data restoration is complete
+	emscripten_set_main_loop(Qcommon_StartSubsystems, 0, 1);
+#else
+	Qcommon_StartSubsystems();
+#endif
+}
+
+void
+Qcommon_StartSubsystems(void)
+{
+#ifdef __EMSCRIPTEN__
+	// Call JavaScript code to check restore status
+	if (wasm_restore_busy())
+		return;
+
+	emscripten_cancel_main_loop();
+
+	EM_ASM(
+		if (typeof Module.hideConsole === 'function')
+			Module.hideConsole();
+	);
+#endif
+
 	Swap_Init();
 	Cbuf_Init();
 	Cmd_Init();
@@ -462,16 +482,6 @@ Qcommon_Init(int argc, char **argv)
 		SCR_EndLoadingPlaque();
 	}
 #endif
-
-	if (argc > 1)
-	{
-		Com_Printf("Startup args:");
-
-		for (int pnum=1; pnum<argc; pnum++)
-			Com_Printf(" %s", argv[pnum]);
-
-		Com_Printf("\n\n");
-	}
 
 	Com_Printf("==== Yamagi Quake II Initialized ====\n\n");
 	Com_Printf("*************************************\n\n");
