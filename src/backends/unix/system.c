@@ -68,6 +68,20 @@ extern FILE	*logfile;
 
 /* ================================================================ */
 
+#ifdef __EMSCRIPTEN__
+void
+WASM_Shutdown(void)
+{
+	EM_ASM(
+		if (typeof Module.showConsole === 'function')
+			Module.showConsole();
+	);
+
+	// Don't come back to the main loop after exiting
+	emscripten_pause_main_loop();
+}
+#endif
+
 void
 Sys_Error(const char *error, ...)
 {
@@ -86,6 +100,10 @@ Sys_Error(const char *error, ...)
 	vsnprintf(string, 1024, error, argptr);
 	va_end(argptr);
 	fprintf(stderr, "Error: %s\n", string);
+
+#ifdef __EMSCRIPTEN__
+	WASM_Shutdown();
+#endif
 
 	exit(1);
 }
@@ -109,13 +127,7 @@ Sys_Quit(void)
 	printf("------------------------------------\n");
 
 #ifdef __EMSCRIPTEN__
-	EM_ASM(
-		if (typeof Module.showConsole === 'function')
-			Module.showConsole();
-	);
-
-	// Don't come back to the main loop after exiting
-	emscripten_pause_main_loop();
+	WASM_Shutdown();
 #endif
 
 	exit(0);
