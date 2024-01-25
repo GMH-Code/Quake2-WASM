@@ -657,6 +657,14 @@ IN_Update(void)
 							consoleKeyCode = kc;
 						}
 					}
+#ifdef __EMSCRIPTEN__
+					// Allow the console to be opened with the Menu (Application) key
+					else if (sc == SDL_SCANCODE_APPLICATION)
+					{
+						Key_Event(K_CONSOLE, down, true);
+						consoleKeyCode = kc;
+					}
+#endif
 					else if ((kc >= SDLK_SPACE) && (kc < SDLK_DELETE))
 					{
 						Key_Event(kc, down, false);
