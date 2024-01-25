@@ -141,6 +141,10 @@
           outputElement.scrollTop = outputElement.scrollHeight;
           outputElement.focus();
         },
+        winResized: () => {
+          // Add code to handle changes on canvas width and height, if necessary.  This function can safely be deleted.
+          console.info('Detected window resize: ' + canvasElement.width + 'x' + canvasElement.height);
+        },
         totalDependencies: 0,
         monitorRunDependencies: (left) => {
           this.totalDependencies = Math.max(this.totalDependencies, left);

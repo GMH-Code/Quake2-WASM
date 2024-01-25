@@ -33,6 +33,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 int glimp_refreshRate = -1;
 
 static cvar_t *vid_displayrefreshrate;
@@ -221,6 +225,13 @@ CreateSDLWindow(int flags, int w, int h)
 		Com_Printf("Creating window failed: %s\n", SDL_GetError());
 		return false;
 	}
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM(
+		if (typeof Module.winResized === 'function')
+			Module.winResized();
+	);
+#endif
 
 	return true;
 }
