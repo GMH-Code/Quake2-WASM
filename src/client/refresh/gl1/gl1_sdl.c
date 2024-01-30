@@ -36,6 +36,7 @@
 #endif
 
 #ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 #include <gl4esinit.h>
 #endif
 
@@ -165,10 +166,24 @@ void RI_SetVsync(void)
 /*
  * Updates the gamma ramp.
  */
+#ifdef __EMSCRIPTEN__
+void
+WASM_UpdateGamma(float gamma)
+{
+	// Post-process gamma in the browser, if possible
+	EM_ASM_DOUBLE({
+		if (typeof Module.setGamma === 'function')
+			Module.setGamma($0);
+	}, gamma);
+}
+#endif
+
 void
 RI_UpdateGamma(void)
 {
-#ifndef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
+	WASM_UpdateGamma(vid_gamma->value);
+#else
 	float gamma = (vid_gamma->value);
 
 	Uint16 ramp[256];
@@ -281,6 +296,11 @@ void RI_GetDrawableSize(int* width, int* height)
 void
 RI_ShutdownContext(void)
 {
+#ifdef __EMSCRIPTEN__
+	// Remove post-process filter
+	WASM_UpdateGamma(-1.0f);
+#endif
+
 	if (window)
 	{
 		if(context)

@@ -123,17 +123,12 @@ These are the current issues:
 
 - Starting this renderer after starting another (including the software renderer) will cause the display to revert to software mode, because otherwise the canvas becomes blank.
 - This renderer cannot be restarted once it has started, meaning you cannot change display modes without reverting to the software renderer.  Forcing this in the code will result in the GL context (the 3D shapes) becoming corrupted.
-- Display gamma/brightness cannot be altered, even if set upon first start.
 
 Usage of the software renderer will likely be saved in the user's configuration, so to get back to OpenGL mode after reverting, the game must be restarted with `+set vid_renderer gl1`.
 
 It appears as though the first two issues are likely within GL4ES, but it could also be due to some other improper shutdown of the GL context when the video is restarted.  Either way, reverting to the software renderer at least allows the user to save before exiting the game.
 
 These OpenGL 1.x issues may someday be fixed by modifying the currently unusable OpenGL ES 3.x renderer to use native WebGL 2.x.
-
-Regarding the brightness issue, SDL2 does not appear to support `SDL_SetWindowGammaRamp` (or `SDL_SetWindowBrightness`) when rendering onto a JavaScript canvas.  A workaround may be created in the future, which may require changing the embedded texture gamma.  This is what Quake 1 does.
-
-It is possible to post-process a brightness/contrast filter with CSS, but this can easily cause washed-out colours as the brighter reds/greens/blues hit their maximum values.  Unfortunately, there doesn't seem to be an official runtime gamma adjustment in CSS yet.
 
 ### Heap Usage
 

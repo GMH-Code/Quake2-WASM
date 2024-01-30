@@ -145,6 +145,11 @@
           // Add code to handle changes on canvas width and height, if necessary.  This function can safely be deleted.
           console.info('Detected window resize: ' + canvasElement.width + 'x' + canvasElement.height);
         },
+        setGamma: (vidGamma) => {
+          // Add code to post-process video gamma changes, if necessary.  This function can safely be deleted.
+          vidGamma = Number(Number(vidGamma).toFixed(2));
+          console.info('Detected canvas gamma change: ' + vidGamma);
+        },
         totalDependencies: 0,
         monitorRunDependencies: (left) => {
           this.totalDependencies = Math.max(this.totalDependencies, left);
