@@ -7,9 +7,11 @@ This is a WebAssembly port of the 3D first-person shooter Quake 2.
 
 Note that this version currently requires the PAK (asset) files from the shareware or full version of the original game.
 
-[Quake-WASM](https://github.com/GMH-Code/Quake-WASM) is also available, playable [here](https://gmh-code.github.io/quake/), and can be built with open source PAK files.  Quake-WASM is based on id's original code, and is designed to match the original game as closely as possible.  It retains limitations, and has low memory usage and high performance in modern browsers.
+Quake2-WASM is based upon *Yamagi Quake II*, and inherits changes to the original game.  These alterations may include changes to performance, memory usage, and visual effects.
 
-Quake2-WASM is based upon *Yamagi Quake II*, and therefore inherits the changes to the original game.  These alterations may include changes to performance, memory usage, and visual effects.
+OpenGL ES 3.x hardware accelerated rendering is available in-browser.  This is translated to WebGL 2.x, and it contains many impressive visual effects.  The OpenGL 1.x and software renderers also work, which have fewer GPU requirements.
+
+[Quake-WASM](https://github.com/GMH-Code/Quake-WASM) is also available, playable [here](https://gmh-code.github.io/quake/), and can be built with open source PAK files.  Quake-WASM is based on id's original code, and is designed to match the original Quake as closely as possible.
 
 Playing the Shareware Version
 -----------------------------
@@ -115,9 +117,9 @@ Due to an Emscripten limitation with load-time linking dynamic libraries in subf
 Known Issues
 ------------
 
-### OpenGL Renderer
+### OpenGL 1.x Renderer
 
-All of these problems can be solved by configuring the game to use the software renderer, but that comes with a performance impact and change in visual quality.  You can choose this in `wasm.cfg`, `config.cfg`, at startup with `+set vid_renderer soft`.
+All of these problems can be solved by configuring the game to use the OpenGL ES 3.x (translated to WebGL 2.x) renderer, or the software renderer.  You can choose this in `wasm.cfg`, `config.cfg`, or at startup with `+set vid_renderer gles3` or `+set vid_renderer soft`.
 
 These are the current issues:
 
@@ -125,10 +127,6 @@ These are the current issues:
 - This renderer cannot be restarted once it has started, meaning you cannot change display modes without reverting to the software renderer.  Forcing this in the code will result in the GL context (the 3D shapes) becoming corrupted.
 
 Usage of the software renderer will likely be saved in the user's configuration, so to get back to OpenGL mode after reverting, the game must be restarted with `+set vid_renderer gl1`.
-
-It appears as though the first two issues are likely within GL4ES, but it could also be due to some other improper shutdown of the GL context when the video is restarted.  Either way, reverting to the software renderer at least allows the user to save before exiting the game.
-
-These OpenGL 1.x issues may someday be fixed by modifying the currently unusable OpenGL ES 3.x renderer to use native WebGL 2.x.
 
 ### Heap Usage
 
@@ -147,7 +145,7 @@ Install and fully activate the latest version, as per the instructions.
 
 ### GL4ES
 
-This is currently required to build Quake2-WASM, and is the default renderer unless the user changes video settings.  If you start the game up in software mode, it will not be initialised or used.  At a future date, this library may be completely replaced by native WebGL.
+This is currently required to build the OpenGL 1.x part of Quake2-WASM, which can run in WebGL 1.x.  If you start the game up in OpenGL ES 3.x (WebGL 2.x) or software mode, it will not be initialised or used.  At a future date, this library may be completely removed.
 
 Clone or download GL4ES: https://ptitseb.github.io/gl4es/
 
@@ -175,6 +173,7 @@ The build will output the following into the `release` folder:
     game.wasm
     ref_soft.wasm
     ref_gl1.wasm
+    ref_gles3.wasm
 
 Note that the game will not properly boot without PAK files present in `wasm/baseq2`.  It is not legal to host nor embed any of the PAK files (or their contents) on a public server, regardless of whether you have the shareware or full version, so do not be tempted to do this.  In any case, licence compliance is your responsibility.
 

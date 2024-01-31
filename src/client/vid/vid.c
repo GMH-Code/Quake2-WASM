@@ -338,7 +338,7 @@ qboolean
 VID_HasRenderer(const char *renderer)
 {
 #ifdef __EMSCRIPTEN__
-	return ((strcmp("soft", renderer) == 0) || (strcmp("gl1", renderer) == 0));
+	return ((strcmp("soft", renderer) == 0) || (strcmp("gl1", renderer) == 0) || (strcmp("gles3", renderer) == 0));
 #else
 	char reflib_path[MAX_OSPATH] = {0};
 	VID_GetRendererLibPath(renderer, reflib_path, sizeof(reflib_path));
@@ -599,7 +599,11 @@ VID_Init(void)
 	// Console variables
 	vid_gamma = Cvar_Get("vid_gamma", "1.0", CVAR_ARCHIVE);
 	vid_fullscreen = Cvar_Get("vid_fullscreen", "0", CVAR_ARCHIVE);
+#ifdef __EMSCRIPTEN__
+	vid_renderer = Cvar_Get("vid_renderer", "gles3", CVAR_ARCHIVE);
+#else
 	vid_renderer = Cvar_Get("vid_renderer", "gl1", CVAR_ARCHIVE);
+#endif
 
 	// Commands
 	Cmd_AddCommand("vid_restart", VID_Restart_f);

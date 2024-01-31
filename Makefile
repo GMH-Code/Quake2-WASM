@@ -405,7 +405,7 @@ endif
 
 # Builds everything
 ifeq ($(YQ2_OSTYPE), Emscripten)
-all: config ref_soft ref_gl1 game client
+all: config ref_soft ref_gl1 ref_gles3 game client
 else
 all: config client server game ref_gl1 ref_gl3 ref_gles3 ref_soft
 endif
@@ -553,9 +553,11 @@ endif
 
 ifeq ($(YQ2_OSTYPE), Emscripten)
 release/quake2.html : CFLAGS += -fPIC
-release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sMAIN_MODULE=2 -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB \
-                                 -sALLOW_MEMORY_GROWTH --shell-file wasm/shell.html --preload-file=wasm/baseq2@/baseq2 \
-                                 release/ref_soft.wasm release/ref_gl1.wasm release/game.wasm -lidbfs.js
+release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=1 -sMAX_WEBGL_VERSION=2 -sMAIN_MODULE=2 \
+                                 -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB -sALLOW_MEMORY_GROWTH \
+                                 --shell-file wasm/shell.html --preload-file=wasm/baseq2@/baseq2 \
+                                 release/ref_soft.wasm release/ref_gl1.wasm release/ref_gles3.wasm release/game.wasm \
+                                 -lidbfs.js
 endif
 
 ifeq ($(WITH_RPATH),yes)
@@ -723,7 +725,17 @@ release/ref_gles3.dylib : CFLAGS += -DYQ2_GL3_GLES3 -DYQ2_GL3_GLES
 
 release/ref_gles3.dylib : LDFLAGS += -shared
 
-else ifneq ($(YQ2_OSTYPE), Emscripten) # not Windows, Darwin, or Emscripten
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+
+ref_gles3:
+	@echo "===> Building ref_gles3.wasm"
+	$(MAKE) release/ref_gles3.wasm
+
+release/ref_gles3.wasm : GLAD_INCLUDE = -Isrc/client/refresh/gl3/glad-gles3/include
+release/ref_gles3.wasm : CFLAGS += -fPIC -DYQ2_GL3_GLES3 -DYQ2_GL3_GLES
+release/ref_gles3.wasm : LDFLAGS += -sSIDE_MODULE=1
+
+else # not Windows, Darwin, or Emscripten
 
 ref_gles3:
 	@echo "===> Building ref_gles3.so"
@@ -1263,6 +1275,10 @@ release/ref_gles3.dll : $(REFGLES3_OBJS)
 	$(Q)strip $@
 else ifeq ($(YQ2_OSTYPE), Darwin)
 release/ref_gles3.dylib : $(REFGLES3_OBJS)
+	@echo "===> LD $@"
+	${Q}$(CC) $(LDFLAGS) $(REFGLES3_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
+else ifeq ($(YQ2_OSTYPE), Emscripten)
+release/ref_gles3.wasm : $(REFGLES3_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(REFGLES3_OBJS) $(LDLIBS) $(SDLLDFLAGS) -o $@
 else
