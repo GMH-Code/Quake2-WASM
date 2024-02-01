@@ -114,19 +114,29 @@ Mission pack code is *not* currently part of the Quake2-WASM build.
 
 Due to an Emscripten limitation with load-time linking dynamic libraries in subfolders, only one `game.wasm` is supported at present, so you cannot switch between mods or mission packs at runtime.
 
-Known Issues
-------------
+Known Issues / Workarounds
+--------------------------
+
+These affect lesser-used video switches and restarts, and they should normally go unnoticed.  Nevertheless, they may be fixed in the future.
+
+You can always force a specific renderer on startup with `+set vid_renderer gles3`, `+set vid_renderer gl1` or `+set vid_renderer soft`, to ensure the game starts in the way you want.
 
 ### OpenGL 1.x Renderer
 
-All of these problems can be solved by configuring the game to use the OpenGL ES 3.x (translated to WebGL 2.x) renderer, or the software renderer.  You can choose this in `wasm.cfg`, `config.cfg`, or at startup with `+set vid_renderer gles3` or `+set vid_renderer soft`.
+These problems appear to be specific to GL4ES:
 
-These are the current issues:
+- Starting this renderer after starting another (including the software renderer) will intentionally switch the display to software mode, because otherwise the canvas becomes blank.
+- This renderer also cannot be restarted due to a corruption of the 3D environment, meaning you cannot change display modes without reverting to the software renderer.
 
-- Starting this renderer after starting another (including the software renderer) will cause the display to revert to software mode, because otherwise the canvas becomes blank.
-- This renderer cannot be restarted once it has started, meaning you cannot change display modes without reverting to the software renderer.  Forcing this in the code will result in the GL context (the 3D shapes) becoming corrupted.
+Usage of the software renderer will likely be saved in the user's configuration, so to get back to OpenGL 1.x mode after reverting, restart the game with the appropriate command-line parameter.
 
-Usage of the software renderer will likely be saved in the user's configuration, so to get back to OpenGL mode after reverting, the game must be restarted with `+set vid_renderer gl1`.
+### OpenGL ES 3.x Renderer
+
+These problems appear to be due to an inability to switch the WebGL context to a different version at runtime:
+
+- You cannot switch to another renderer, not even software mode, after this one has successfully started.
+
+- You cannot switch to this renderer if you used a different one.
 
 ### Heap Usage
 

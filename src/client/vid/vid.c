@@ -38,7 +38,11 @@
 #include "../../common/unzip/miniz/miniz.h"
 
 #ifdef __EMSCRIPTEN__
+// Temporary renderer lock and block workarounds for issues with specific
+// switches
 static qboolean gl1_block_init = false;
+static qboolean gles3_block_init = false;
+static qboolean gles3_lock = false;
 #endif
 
 static unsigned char*
@@ -395,6 +399,17 @@ VID_ShutdownRenderer(void)
 	ref_active = false;
 }
 
+#ifdef __EMSCRIPTEN__
+/*
+ * Ask the user to reload the page (if it is required to reset the GL context).
+ */
+void
+WASM_RequestPageReload(void)
+{
+	Com_Printf("Please reload the page!\n");
+}
+#endif
+
 /*
  * Loads and initializes a renderer.
  */
@@ -420,7 +435,16 @@ VID_LoadRenderer(void)
 	if (gl1_block_init && strcmp(vid_renderer->string, "gl1") == 0)
 	{
 		Com_Printf("Cannot start the gl1 renderer now.\n");
-		Com_Printf("Please reload the page!\n");
+		WASM_RequestPageReload();
+		return false;
+	}
+
+	// If a different renderer has been used, this will give us the wrong WebGL
+	// context version.
+	if (gles3_block_init && strcmp(vid_renderer->string, "gles3") == 0)
+	{
+		Com_Printf("Cannot start the gles3 renderer now.\n");
+		WASM_RequestPageReload();
 		return false;
 	}
 #endif
@@ -450,9 +474,13 @@ VID_LoadRenderer(void)
 	}
 
 #ifdef __EMSCRIPTEN__
-	// The GL1.x renderer currently does not initialise properly after another
-	// renderer has started.
+	// The GL1.x renderer currently does not initialise properly after a
+	// restart, or after any other renderer has started.
 	gl1_block_init = true;
+
+	// The GLES3.x renderer will not start after any other renderer is started.
+	if (strcmp(vid_renderer->string, "gles3") != 0)
+		gles3_block_init = true;
 #endif
 
 	// Fill in the struct exported to the renderer.
@@ -552,6 +580,21 @@ VID_CheckChanges(void)
 		// More or less blocks the client.
 		cls.disable_screen = true;
 
+#ifdef __EMSCRIPTEN__
+		// If GLES3 (WebGL 2.x) has been used, no other renderers work
+		// afterwards, not even software mode, so switch back to GLES3.
+		if (gles3_lock && strcmp(vid_renderer->string, "gles3") != 0)
+		{
+			Com_Printf("Cannot switch from the gles3 renderer now.\n");
+			WASM_RequestPageReload();
+			Cvar_Set("vid_renderer", "gles3");
+		}
+
+		// GLES3 could fail even after an initial start, so temporarily remove
+		// the lock if it is present.
+		gles3_lock = false;
+#endif
+
 		// Mkay, let's try our luck.
 		while (!VID_LoadRenderer())
 		{
@@ -579,6 +622,14 @@ VID_CheckChanges(void)
 				Com_Error(ERR_FATAL, "No usable renderer found!\n");
 			}
 		}
+
+#ifdef __EMSCRIPTEN__
+		// We got GLES3, so now we cannot switch to anything else, unless it
+		// fails, which will likely leave us with a black screen anyway.
+		if (strcmp(vid_renderer->string, "gles3") == 0) {
+			gles3_lock = true;
+		}
+#endif
 
 		// Unblock the client.
 		cls.disable_screen = false;
