@@ -556,8 +556,8 @@ release/quake2.html : CFLAGS += -fPIC
 release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=1 -sMAX_WEBGL_VERSION=2 -sMAIN_MODULE=2 \
                                  -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB -sALLOW_MEMORY_GROWTH \
                                  --shell-file wasm/shell.html --preload-file=wasm/baseq2@/baseq2 \
-                                 release/ref_soft.wasm release/ref_gl1.wasm release/ref_gles3.wasm release/game.wasm \
-                                 -lidbfs.js
+                                 release/ref_soft.wasm release/ref_gl1.wasm release/ref_gles3.wasm \
+                                 release/game_baseq2.wasm -lidbfs.js
 endif
 
 ifeq ($(WITH_RPATH),yes)
@@ -838,16 +838,16 @@ release/baseq2/game.dylib : LDFLAGS += -shared
 else ifeq ($(YQ2_OSTYPE), Emscripten)
 
 game:
-	@echo "===> Building game.wasm"
-	$(MAKE) release/game.wasm
+	@echo "===> Building game_baseq2.wasm"
+	$(MAKE) release/game_baseq2.wasm
 
 build/baseq2/%.o: %.c
 	@echo "===> CC $<"
 	${Q}mkdir -p $(@D)
 	${Q}$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<
 
-release/game.wasm : CFLAGS += -fPIC -Wno-unused-result
-release/game.wasm : LDFLAGS += -sSIDE_MODULE=1
+release/game_baseq2.wasm : CFLAGS += -fPIC -Wno-unused-result
+release/game_baseq2.wasm : LDFLAGS += -sSIDE_MODULE=1
 
 else # not Windows, Darwin, or Emscripten
 
@@ -1318,7 +1318,7 @@ release/baseq2/game.dylib : $(GAME_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(GAME_OBJS) $(LDLIBS) -o $@
 else ifeq ($(YQ2_OSTYPE), Emscripten)
-release/game.wasm : $(GAME_OBJS)
+release/game_baseq2.wasm : $(GAME_OBJS)
 	@echo "===> LD $@"
 	${Q}$(CC) $(LDFLAGS) $(GAME_OBJS) $(LDLIBS) -o $@
 else

@@ -430,13 +430,19 @@ Sys_GetGameAPI(void *parms)
 {
 	void *(*GetGameAPI)(void *);
 
+#ifdef __EMSCRIPTEN__
+	char gamename[MAX_OSPATH];
+#else
 	char name[MAX_OSPATH];
 	char *path;
 	char *str_p;
+#endif
+
 #ifdef __APPLE__
 	const char *gamename = "game.dylib";
 #elif defined(__EMSCRIPTEN__)
-	const char *gamename = "game.wasm";
+	cvar_t *game = Cvar_Get("game", "", CVAR_LATCH | CVAR_SERVERINFO);
+	sprintf(gamename, "game_%s.wasm", strcmp(game->string, "") == 0 ? BASEDIRNAME : game->string);
 #else
 	const char *gamename = "game.so";
 #endif

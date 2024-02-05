@@ -5,7 +5,7 @@ This is a WebAssembly port of the 3D first-person shooter Quake 2.
 
 [Run Quake2-WASM in your browser here](https://gmh-code.github.io/quake2/).
 
-Note that this version currently requires the PAK (asset) files from the shareware or full version of the original game.
+Note that this currently requires the PAK (asset) files from the shareware or full version of the original game.
 
 Quake2-WASM is based upon *Yamagi Quake II*, and inherits changes to the original game.  These alterations may include changes to performance, memory usage, and visual effects.
 
@@ -108,11 +108,11 @@ It should be possible to connect to a WebSockets proxy to enable online play, bu
 Mods and Mission Packs
 ----------------------
 
-These are partly supported, but since the QuakeC interpreter was only present in Quake 1, mods and mission packs now require separate compilation into WebAssembly.
+These are supported, but since the QuakeC interpreter was only present in Quake 1, mods and mission packs now require separate compilation into WebAssembly.
+
+Due to an Emscripten limitation with loading dynamic libraries in subfolders at startup, you must make sure these custom files include the game name instead of the traditional method of placing it in the game subfolder.  For example, the library for the main game folder `baseq2` is named `game_baseq2.wasm`.  Additional libraries will need to be added to the `Makefile`, so they get loaded on startup.
 
 Mission pack code is *not* currently part of the Quake2-WASM build.
-
-Due to an Emscripten limitation with load-time linking dynamic libraries in subfolders, only one `game.wasm` is supported at present, so you cannot switch between mods or mission packs at runtime.
 
 Known Issues / Workarounds
 --------------------------
@@ -180,7 +180,7 @@ The build will output the following into the `release` folder:
     quake2.js
     quake2.data
     quake2.wasm
-    game.wasm
+    game_baseq2.wasm
     ref_soft.wasm
     ref_gl1.wasm
     ref_gles3.wasm
