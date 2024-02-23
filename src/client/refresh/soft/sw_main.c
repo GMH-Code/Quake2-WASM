@@ -1900,6 +1900,12 @@ RE_InitContext(void *win)
 	snprintf(title, sizeof(title), "Yamagi Quake II %s - Soft Render", YQ2VERSION);
 	SDL_SetWindowTitle(window, title);
 
+#ifdef __EMSCRIPTEN__
+	// Allow software rendering fallback.  Without SDL_RENDERER_PRESENTVSYNC
+	// Emscripten's timing mode will revert to setTimeout() instead of
+	// requestAnimationFrame() when the display mode is changed.
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+#else
 	if (r_vsync->value)
 	{
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -1908,6 +1914,7 @@ RE_InitContext(void *win)
 	{
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	}
+#endif
 
 	/* Select the color for drawing. It is set to black here. */
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);

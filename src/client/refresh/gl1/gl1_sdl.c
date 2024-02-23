@@ -136,6 +136,12 @@ int RI_PrepareForWindow(void)
  */
 void RI_SetVsync(void)
 {
+#ifdef __EMSCRIPTEN__
+	// Emscripten's timing mode may revert to setTimeout() instead of
+	// requestAnimationFrame() if SDL_GL_SetSwapInterval() disables VSync.
+	// This can cause excessive lags and overall slowdown.
+	vsyncActive = false;
+#else
 	// Make sure that the user given
 	// value is SDL compatible...
 	int vsync = 0;
@@ -161,6 +167,7 @@ void RI_SetVsync(void)
 	}
 
 	vsyncActive = SDL_GL_GetSwapInterval() != 0;
+#endif
 }
 
 /*
