@@ -879,6 +879,17 @@ Qcommon_Frame(int usec)
 void
 Qcommon_Shutdown(void)
 {
+#ifdef __EMSCRIPTEN__
+	EM_ASM(
+		if (typeof Module.showConsole === 'function')
+			Module.showConsole();
+	);
+
+	// Don't come back to the main loop after exiting.  Emscripten's runtime
+	// stays active, so saves in progress should still complete.
+	emscripten_cancel_main_loop();
+#endif
+
 	FS_ShutdownFilesystem();
 	Cvar_Fini();
 
