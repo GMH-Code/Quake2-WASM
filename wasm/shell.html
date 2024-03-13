@@ -165,6 +165,7 @@
           // Add code to post-process video gamma changes, if necessary.  This function can safely be deleted.
           vidGamma = Number(Number(vidGamma).toFixed(2));
           console.info('Detected canvas gamma change: ' + vidGamma);
+          canvasElement.style.filter = vidGamma < 0 ? null : 'brightness(' + (vidGamma * 2.0) + ')';
         },
         totalDependencies: 0,
         monitorRunDependencies: (left) => {
