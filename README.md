@@ -98,6 +98,21 @@ In Quake2-WASM, you can append a single `?` to the end of the URL and place `&` 
 
     https://127.0.0.1/quake2.html?+set&vid_renderer&soft&+set&r_mode&21
 
+Recording Demos
+---------------
+
+Recording demos is supported, and the recordings can span multiple levels.  You can start one by typing something like this in the console, after starting a game:
+
+    record mydemo
+
+To stop the demo:
+
+    stop
+
+The file will be saved in the browser database, but you will also be given the opportunity to export it if you want to.
+
+The demo can be played back with `map mydemo.dm2`.  If it starts in a paused state, press `Esc` twice.
+
 Networking Support
 ------------------
 

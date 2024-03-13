@@ -29,6 +29,7 @@
 #include "input/header/input.h"
 
 #ifdef __EMSCRIPTEN__
+#include "../backends/wasm/header/export.h"
 #include "../backends/wasm/header/syncfs.h"
 #endif
 
@@ -107,6 +108,10 @@ extern cvar_t *allow_download_models;
 extern cvar_t *allow_download_sounds;
 extern cvar_t *allow_download_maps;
 
+#ifdef __EMSCRIPTEN__
+static char rec_demo_path[MAX_OSPATH];
+#endif
+
 /*
  * Dumps the current net message, prefixed by the length
  */
@@ -128,7 +133,6 @@ CL_WriteDemoMessage(void)
 void
 CL_Stop_f(void)
 {
-#ifndef __EMSCRIPTEN__
 	int len;
 
 	if (!cls.demorecording)
@@ -144,7 +148,10 @@ CL_Stop_f(void)
 	cls.demofile = NULL;
 	cls.demorecording = false;
 	Com_Printf("Stopped demo.\n");
-#endif // !__EMSCRIPTEN__
+
+#ifdef __EMSCRIPTEN__
+	wasm_export_file(rec_demo_path);
+#endif
 }
 
 /*
@@ -154,9 +161,6 @@ CL_Stop_f(void)
 void
 CL_Record_f(void)
 {
-#ifdef __EMSCRIPTEN__
-	Com_Printf("Recording demos is disabled in Quake2-WASM.\n");
-#else
 	char name[MAX_OSPATH];
 	byte buf_data[MAX_MSGLEN];
 	sizebuf_t buf;
@@ -194,6 +198,10 @@ CL_Record_f(void)
 		Com_Printf("ERROR: couldn't open.\n");
 		return;
 	}
+
+#ifdef __EMSCRIPTEN__
+	memcpy(rec_demo_path, name, sizeof(rec_demo_path));
+#endif
 
 	cls.demorecording = true;
 
@@ -267,7 +275,6 @@ CL_Record_f(void)
 	len = LittleLong(buf.cursize);
 	fwrite(&len, 4, 1, cls.demofile);
 	fwrite(buf.data, buf.cursize, 1, cls.demofile);
-#endif // __EMSCRIPTEN__
 }
 
 void
