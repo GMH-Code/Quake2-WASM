@@ -132,6 +132,9 @@ static void SetExecutablePath(char* exePath)
 		exePath[0] = '\0';
 	}
 
+#elif defined(__EMSCRIPTEN__)
+	exePath[0] = '\0';
+
 #else
 
 	// Several platforms (for example OpenBSD) donn't provide a
@@ -149,9 +152,6 @@ const char *Sys_GetBinaryDir(void)
 {
 	static char exeDir[PATH_MAX] = {0};
 
-#ifdef __EMSCRIPTEN__
-	Q_strlcpy(exeDir, "./", sizeof(exeDir));
-#else
 	if(exeDir[0] != '\0') {
 		return exeDir;
 	}
@@ -159,7 +159,9 @@ const char *Sys_GetBinaryDir(void)
 	SetExecutablePath(exeDir);
 
 	if (exeDir[0] == '\0') {
+#ifndef __EMSCRIPTEN__
 		Com_Printf("Couldn't determine executable path. Using ./ instead.\n");
+#endif // !__EMSCRIPTEN__
 		Q_strlcpy(exeDir, "./", sizeof(exeDir));
 	} else {
 		// cut off executable name
@@ -171,7 +173,6 @@ const char *Sys_GetBinaryDir(void)
 
 		if (lastSlash != NULL) lastSlash[1] = '\0'; // cut off after last (back)slash
 	}
-#endif // __EMSCRIPTEN__
 
 	return exeDir;
 }

@@ -594,7 +594,7 @@ CL_ConnectionlessPacket(void)
 		}
 
 		Netchan_Setup(NS_CLIENT, &cls.netchan, net_from, cls.quakePort);
-		char *buff = NET_AdrToString(cls.netchan.remote_address);
+		NET_AdrToString(cls.netchan.remote_address);
 
 		for(int i = 1; i < Cmd_Argc(); i++)
 		{

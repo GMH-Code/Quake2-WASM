@@ -165,7 +165,8 @@ override CFLAGS += -fsanitize=undefined -DUSE_SANITIZER
 endif
 else
 ifdef EMSCRIPTEN
-CFLAGS ?= -O3 -Wall -pipe -fomit-frame-pointer
+CFLAGS ?= -O3 -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare \
+          -Wno-missing-field-initializers -pipe -fomit-frame-pointer
 else
 CFLAGS ?= -O2 -Wall -pipe -fomit-frame-pointer
 endif
