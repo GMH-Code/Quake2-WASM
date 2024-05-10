@@ -125,9 +125,17 @@ Mods and Mission Packs
 
 These are supported, but since the QuakeC interpreter was only present in Quake 1, mods and mission packs now require separate compilation into WebAssembly.
 
-Due to an Emscripten limitation with loading dynamic libraries in subfolders at startup, you must make sure these custom files include the game name instead of the traditional method of placing it in the game subfolder.  For example, the library for the main game folder `baseq2` is named `game_baseq2.wasm`.  Additional libraries will need to be added to the `Makefile`, so they get loaded on startup.
+Due to an Emscripten limitation with loading dynamic libraries in subfolders at startup, you must make sure these custom files include the game name instead of the traditional method of placing it in the game subfolder.  For example, the library for the main game folder `baseq2` is named `game_baseq2.wasm`.
 
 Mission pack code is *not* currently part of the Quake2-WASM build.
+
+If you want to add extra mods or mission packs, follow these steps:
+
+1. Compile the mods or mission packs you want to include into WebAssembly.
+2. Specify the compiled libraries with `WASM_EXTRA_GAMES="/path/to/file1.wasm /path/to/file2.wasm"` (and so on) when compiling Quake2-WASM with `emmake make`.
+3. After the compilation is complete, copy the `.wasm` files to the `release` folder.
+
+It is likely that third-party modules will not 'just work'!  Some code adjustment to them may be necessary.
 
 Known Issues / Workarounds
 --------------------------

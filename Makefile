@@ -558,7 +558,7 @@ release/quake2.html : LDFLAGS += -sFULL_ES2=1 -sFULL_ES3=1 -sMIN_WEBGL_VERSION=1
                                  -sINITIAL_MEMORY=128MB -sTOTAL_STACK=4MB -sALLOW_MEMORY_GROWTH \
                                  --shell-file wasm/shell.html --preload-file=wasm/baseq2@/baseq2 \
                                  release/ref_soft.wasm release/ref_gl1.wasm release/ref_gles3.wasm \
-                                 release/game_baseq2.wasm -lidbfs.js
+                                 release/game_baseq2.wasm $(WASM_EXTRA_GAMES) -lidbfs.js
 endif
 
 ifeq ($(WITH_RPATH),yes)
