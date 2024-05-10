@@ -30,6 +30,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include "../backends/wasm/header/capmouse.h"
 #include "../backends/wasm/header/initfs.h"
 #endif
 
@@ -374,6 +375,8 @@ Qcommon_StartSubsystems(void)
 		if (typeof Module.hideConsole === 'function')
 			Module.hideConsole();
 	);
+
+	wasm_capture_mouse();
 #endif
 
 	Swap_Init();

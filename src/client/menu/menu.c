@@ -34,6 +34,10 @@
 #include "../sound/header/local.h"
 #include "header/qmenu.h"
 
+#ifdef __EMSCRIPTEN__
+#include "../../backends/wasm/header/capmouse.h"
+#endif
+
 /* Number of the frames of the spinning quake logo */
 #define NUM_CURSOR_FRAMES 15
 static int m_cursor_width = 0;
@@ -2281,6 +2285,10 @@ ConsoleFunc(void *unused)
     {
         Cvar_Set("paused", "1");
     }
+
+#ifdef __EMSCRIPTEN__
+    wasm_capture_mouse();
+#endif
 }
 
 static void
@@ -3124,6 +3132,10 @@ ModsApplyActionFunc(void *unused)
         menu_startdemoloop = true;
 
         M_ForceMenuOff();
+
+#ifdef __EMSCRIPTEN__
+        wasm_capture_mouse();
+#endif
     }
 }
 
@@ -3256,6 +3268,10 @@ StartGame(void)
 
     Cbuf_AddText("loading ; killserver ; wait ; newgame\n");
     cls.key_dest = key_game;
+
+#ifdef __EMSCRIPTEN__
+    wasm_capture_mouse();
+#endif
 }
 
 static void
@@ -3609,6 +3625,10 @@ LoadGameCallback(void *self)
 	}
 
     M_ForceMenuOff();
+
+#ifdef __EMSCRIPTEN__
+    wasm_capture_mouse();
+#endif
 }
 
 static void
@@ -3768,6 +3788,10 @@ SaveGameCallback(void *self)
 
     Cbuf_AddText(va("save save%i\n", a->generic.localdata[0]));
     M_ForceMenuOff();
+
+#ifdef __EMSCRIPTEN__
+    wasm_capture_mouse();
+#endif
 }
 
 static void
@@ -3973,6 +3997,10 @@ JoinServerFunc(void *self)
                 NET_AdrToString(local_server_netadr[index]));
     Cbuf_AddText(buffer);
     M_ForceMenuOff();
+
+#ifdef __EMSCRIPTEN__
+    wasm_capture_mouse();
+#endif
 }
 
 static void
@@ -4239,6 +4267,10 @@ StartServerActionFunc(void *self)
     }
 
     M_ForceMenuOff();
+
+#ifdef __EMSCRIPTEN__
+    wasm_capture_mouse();
+#endif
 }
 
 static void
