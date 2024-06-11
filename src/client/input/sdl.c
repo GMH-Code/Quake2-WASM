@@ -2107,7 +2107,12 @@ IN_Controller_Init(qboolean notify_user)
 		SDL_SetHint( SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1" );
 #endif
 
-		if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) == -1)
+		if (SDL_Init(
+			SDL_INIT_GAMECONTROLLER
+#ifndef __EMSCRIPTEN__
+			| SDL_INIT_HAPTIC // SDL's haptic feedback is not supported with Emscripten
+#endif
+		) == -1)
 		{
 			Com_Printf ("Couldn't init SDL Game Controller: %s.\n", SDL_GetError());
 			return;

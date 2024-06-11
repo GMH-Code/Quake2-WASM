@@ -113,6 +113,11 @@ The file will be saved in the browser database, but you will also be given the o
 
 The demo can be played back with `map mydemo.dm2`.  If it starts in a paused state, press `Esc` twice.
 
+Physical Gamepads & Joysticks
+-----------------------------
+
+Attached gamepads and dual analogue controls should work, providing your browser supports their functionality.
+
 Networking Support
 ------------------
 
